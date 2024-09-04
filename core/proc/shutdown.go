@@ -54,7 +54,7 @@ func WrapUp() {
 
 func gracefulStop(signals chan os.Signal) {
 	signal.Stop(signals)
-
+	start := time.Now()
 	logx.Info("Custom Got signal SIGTERM, shutting down...")
 	done := make(chan struct{})
 	go func() {
@@ -77,7 +77,7 @@ func gracefulStop(signals chan os.Signal) {
 	case <-time.After(delayTimeBeforeForceQuit - wrapUpTime):
 	case <-done:
 	}
-	logx.Infof("Custom Still alive after %v, going to force kill the process...", delayTimeBeforeForceQuit)
+	logx.Infof("Custom Still alive after %v, going to force kill the process...", time.Since(start))
 	syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
 }
 
