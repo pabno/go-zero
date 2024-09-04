@@ -1,4 +1,4 @@
-module github.com/pabno/go-zero
+module github.com/zeromicro/go-zero
 
 go 1.18
 

@@ -55,14 +55,29 @@ func WrapUp() {
 func gracefulStop(signals chan os.Signal) {
 	signal.Stop(signals)
 
-	logx.Info("Got signal SIGTERM, shutting down...")
-	go wrapUpListeners.notifyListeners()
+	logx.Info("Custom Got signal SIGTERM, shutting down...")
+	done := make(chan struct{})
+	go func() {
+		wrapUpListeners.notifyListeners()
+		close(done)
+	}()
 
-	time.Sleep(wrapUpTime)
-	go shutdownListeners.notifyListeners()
+	select {
+	case <-time.After(wrapUpTime):
+	case <-done:
+	}
 
-	time.Sleep(delayTimeBeforeForceQuit - wrapUpTime)
-	logx.Infof("Still alive after %v, going to force kill the process...", delayTimeBeforeForceQuit)
+	done = make(chan struct{})
+	go func() {
+		shutdownListeners.notifyListeners()
+		close(done)
+	}()
+
+	select {
+	case <-time.After(delayTimeBeforeForceQuit - wrapUpTime):
+	case <-done:
+	}
+	logx.Infof("Custom Still alive after %v, going to force kill the process...", delayTimeBeforeForceQuit)
 	syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
 }
 
